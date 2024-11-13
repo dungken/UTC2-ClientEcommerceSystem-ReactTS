@@ -1,24 +1,45 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import './assets/css/reset.css';
+import './assets/css/global.css';
+import './assets/css/responsive.css';
+import './assets/css/header.css';
+import './assets/css/home.css';
+import './assets/css/cart.css';
+import './assets/css/about.css';
+import './assets/css/blog-details.css';
+import './assets/css/product-details.css';
+import './assets/css/footer.css';
+
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+import Home from './components/Home/Home';
+import Header from './components/Layout/Header';
+import Cart from './components/Cart/Cart';
+import Footer from './components/Layout/Footer';
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import Product from './components/Product/Product';
+import ProductPage from './components/Product/ProductPage';
+import MainLayoutAccount from './components/Account/MainLayoutAccount';
+import CoolPrintPage from './components/Coolxprint/CoolPrintPage';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div id="app">
+      <div id="site-wrapper">
+        <Router>
+
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/product-detail" element={<Product />} />
+            <Route path="/collection-product" element={<ProductPage />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/account" element={<MainLayoutAccount />} />
+            <Route path="/coolxprint" element={<CoolPrintPage />} />
+
+          </Routes>
+
+        </Router>
+      </div>
     </div>
   );
 }
