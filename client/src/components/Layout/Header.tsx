@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Coolclub from "../../assets/images/coolmate.svg";
 import rising84 from "../../assets/images/84rising.svg";
 import coolxprint from "../../assets/images/coolxprint.svg";
@@ -45,12 +45,110 @@ import AoDaiTayCompactV2 from "../../assets/images/ao-dai-tay-cotton-compact-v2.
 import { Link } from "react-router-dom";
 import { Button } from "react-bootstrap";
 import AuthModal from "../Account/AuthModal";
+import { GetCategoriesService } from "../../services/ProductService";
+import { jwtDecode } from "jwt-decode";
+import MyPayload from "../../models/MyJwtPayload";
 
+// Định nghĩa kiểu dữ liệu Category
+interface Category {
+    id: string;
+    name: string;
+    description: string;
+    status: string;
+    parentCategoryId: string | null;
+    subCategories: Category[];
+}
+
+// Component hiển thị danh mục con
+const SubCategoryList: React.FC<{ subCategories: Category[] }> = ({ subCategories }) => {
+    if (subCategories.length === 0) return null;
+
+    return (
+        <ul style={{ margin: '0px 20px' }}>
+            {subCategories.map((subCategory) => (
+                <li key={subCategory.id}>
+                    <Link
+                        to={`/collection-product/${subCategory.id}`}
+                        style={{ margin: '7px 0px', color: 'black', textDecoration: 'none', display: 'block' }}
+                    >
+                        {subCategory.name}
+                    </Link>
+                    <SubCategoryList subCategories={subCategory.subCategories} />
+                </li>
+            ))
+            }
+        </ul >
+    );
+};
 
 const Header = () => {
     const [showModal, setShowModal] = useState(false);
     const handleOpen = () => setShowModal(true);
     const handleClose = () => setShowModal(false);
+    interface CartItem {
+        productId: string;
+        name: string;
+        unitPrice: number;
+        size: string;
+        color: string;
+        quantity: number;
+        image: string;
+    }
+
+    const [cart, setCart] = useState<CartItem[]>([]);
+
+    // Call API to get categories
+    const [categories, setCategories] = useState<Category[]>([]);
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await GetCategoriesService() as { success: boolean, data: any, message: string };
+                // console.log(response);
+
+                if (response.success) {
+                    setCategories(response.data);
+                } else {
+                    console.error("API call failed:", response.message);
+                }
+            } catch (error) {
+                console.error("API call failed:", error);
+            }
+        };
+
+        fetchCategories();
+    }, []);
+
+    // console.log(categories);
+    // Lọc các danh mục cha (parentCategoryId === null)
+    const parentCategories = categories.filter((cat) => cat.parentCategoryId === null);
+
+    const [token, setToken] = useState<string | null>(null);
+    const [user, setUser] = useState<any | null>(null);
+    // get token from localStorage
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        const user = localStorage.getItem('user');
+        if (token) {
+            setToken(token);
+            setUser(JSON.parse(user!));
+        }
+    }, []);
+
+    const handleBtnLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setToken(null);
+        setUser(null);
+    }
+
+
+    // Get product from local storage
+    useEffect(() => {
+        const cart = localStorage.getItem('cartItems');
+        if (cart) {
+            setCart(JSON.parse(cart));
+        }
+    }, []);
 
     return (
         <div className="site-header">
@@ -83,36 +181,65 @@ const Header = () => {
                             </a>
                         </li>
                         <li className="menu-topbar-item">
-                            <a href="blog.html" className="menu-topbar-link">
+                            <a href="#" className="menu-topbar-link">
                                 Blog
                             </a>
                         </li>
                         <li className="menu-topbar-item">
-                            <a href="about.html" className="menu-topbar-link">
+                            <a href="#" className="menu-topbar-link">
                                 Về Coolmate
                             </a>
                         </li>
                         <li className="menu-topbar-item">
-                            <a href="#" onClick={handleOpen} className="menu-topbar-link">
-                                Đăng nhập
-                            </a>
+                            {/* Handle show email user when login successfully */}
+                            {token != null ?
+                                <div className="dropdown">
+                                    <Link
+                                        to={"/account/info"}
+                                        className="menu-topbar-link dropdown-toggle d-flex align-items-center gap-2"
+                                        id="dropdownMenuButton"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false"
+                                        style={{ textDecoration: "none", color: "inherit" }}
+                                    >
+                                        <i className="fa-regular fa-user fs-4"></i>
+                                        <span className="fw-semibold">{user.email}</span>
+                                    </Link>
+                                    <ul className="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="dropdownMenuButton">
+                                        <li>
+                                            <Link to="/account/info" className="dropdown-item text-success">
+                                                <i className="bi bi-person-circle"></i> Account
+                                            </Link>
+                                        </li>
+                                        <li>
+                                            <button className="dropdown-item text-danger" onClick={handleBtnLogout}>
+                                                <i className="fa-solid fa-sign-out-alt"></i> Logout
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
 
+                                :
+                                <a href="#" onClick={handleOpen} className="menu-topbar-link">
+                                    Đăng nhập
+                                </a>
+                            }
                             <AuthModal show={showModal} handleClose={handleClose} />
                         </li>
                     </ul>
                 </div>
             </div>
             <div className="topbar-promotion">
-                <a href="">
+                <a href="#">
                     Đồ thu đông mới nhất đang được bán
                     <span>Mua ngay</span>
                     <i className="fa-solid fa-arrow-right"></i>
                 </a>
             </div>
             <div className="wp-header">
-                <div className="container d-flex jc-space-between align-items-center">
+                <div className="container d-flex">
                     <div className="logo-header">
-                        <a href="index.html"><img src={Logo} alt="" /></a>
+                        <Link to="/"><img src={Logo} alt="" /></Link>
                     </div>
                     <menu>
                         <ul className="main-menu d-flex m-0">
@@ -184,108 +311,15 @@ const Header = () => {
                                     Sản phẩm
                                 </a>
                                 <div className="wp-sub-menu container">
-                                    <div className="sub-menu  d-flex">
-                                        <ul className="follow-product">
-                                            <p>Theo sản phẩm</p>
-                                            <span></span>
-                                            <li>
-                                                <a href="#">
-                                                    Tất cả
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="#">
-                                                    Sản phẩm mới
-                                                </a>
-                                            </li>
-                                        </ul>
-                                        <ul className="mens-shirt">
-                                            <p>Áo nam</p>
-                                            <span></span>
-                                            <li>
-                                                <a href="#">
-                                                    Tất cả Áo Nam
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="#">
-                                                    Áo thun
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="#">
-                                                    Áo sơ mi
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="#">
-                                                    Áo polo
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="#">
-                                                    Áo khoác
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="#">
-                                                    Áo Tanktop
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="#">
-                                                    Áo thể thao
-                                                </a>
-                                            </li>
-                                        </ul>
-                                        <ul className="mens-pants">
-                                            <p>Quần nam</p>
-                                            <span></span>
-                                            <li>
-                                                <a href="#">
-                                                    Tất cả quần nam
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="#">
-                                                    Quần shorts
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="#">
-                                                    Quần jeans
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="#">
-                                                    Quần dài
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="#">
-                                                    Quần thể thao
-                                                </a>
-                                            </li>
-                                        </ul>
-                                        <ul className="mens-accessories">
-                                            <p>Phụ kiện nam</p>
-                                            <span></span>
-                                            <li>
-                                                <a href="#">
-                                                    Tất cả phụ kiện
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="#">
-                                                    Tất/Vớ
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="#">
-                                                    Mũ nón
-                                                </a>
-                                            </li>
-                                        </ul>
+                                    <div className="sub-menu d-flex">
+                                        {parentCategories.map((category) => (
+                                            <div key={category.id}>
+                                                <p>{category.name}</p>
+                                                {/* Hiển thị danh mục con */}
+                                                <SubCategoryList subCategories={category.subCategories} />
+                                            </div>
+                                        ))}
+
                                         <ul className="featured-product">
                                             <li>
                                                 <a href="#">
@@ -520,294 +554,44 @@ const Header = () => {
                         </ul>
                     </menu>
                     <div className="tools d-flex">
-                        <div className="form-search">
-
-                            <form action="" method="post">
-                                <button><i className="fa-solid fa-magnifying-glass"></i></button>
-                                <input type="text" name="search" id="search" placeholder="Tìm kiếm sản phẩm... "
-                                    // onFocus={expandSearch()}
-                                    autoComplete={'off'} />
-                            </form>
-                            {/* <div className="form-expand-search d-flex">
-                                <form action="" method="post">
-                                    <input type="text" name="search" id="search" placeholder="Tìm kiếm sản phẩm..."
-                                        autoComplete="off" />
-                                    <button>
-                                        <i className="fa-solid fa-magnifying-glass"></i>
-                                    </button>
-                                </form>
-                                <span id="close-form-search">
-                                    <i className="fa-solid fa-xmark"></i>
-                                </span>
-                            </div>
-                            <div className="display-recent-results">
-                                <div className="wp-featured-keywords">
-                                    <p>Từ khóa nổi bật ngày hôm nay</p>
-                                    <div className="featured-keywords d-flex">
-                                        <a href="">Tập gym</a>
-                                        <a href="">Áo Basic</a>
-                                        <a href="">Excool</a>
-                                        <a href="">Jeans</a>
-                                        <a href="">Chạy bộ</a>
-                                        <a href="">Gym</a>
-                                        <a href="">Polo</a>
-                                    </div>
-                                </div>
-                                <div className="recently-viewed">
-                                    <p>Sản phẩm đã xem gần đây</p>
-                                    <ul className="d-flex">
-                                        <li>
-                                            <a href=""><img src="public/images/mystery-box.png" alt="" /></a>
-                                            <a href="">Mystery Box (trị giá 500K)</a>
-                                        </li>
-                                        <li>
-                                            <a href=""><img src="public/images/quan-joggers-excool.png" alt="" /></a>
-                                            <a href="">Quần Joggers Excool</a>
-                                        </li>
-                                        <li>
-                                            <a href=""><img src="public/images/combo-5-trunk-cotton-compact.png"
-                                                alt="" /></a>
-                                            <a href="">Combo 5 Trunk Cotton Compact</a>
-                                        </li>
-                                        <li>
-                                            <a href=""><img src="public/images/gaiter-mat-na-da-nang-chay-bo.png"
-                                                alt="" /></a>
-                                            <a href="">Gaiter mặt nạ đa năng chạy bộ</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div className="display-latest-results">
-                                <h5>Sản phẩm</h5>
-                                <ul className="d-flex">
-                                    <li>
-                                        <a href="">
-                                            <img className="product-thumb"
-                                                src="public/images/ao-hoodie-84rising-freedom.png" alt="" />
-                                        </a>
-                                        <a className="title" href="">
-                                            Áo Hoodie 84RISING Freedom
-                                        </a>
-                                        <p>
-                                            <span className="new-price">439.000đ</span>
-                                            <del className="old-price">584.000đ</del>
-                                            <span className="percent-discount">-25%</span>
-                                        </p>
-                                    </li>
-                                    <li>
-                                        <a href="">
-                                            <img className="product-thumb" src="public/images/ao-thun-body-84rising.png"
-                                                alt="" />
-                                        </a>
-                                        <a className="title" href="">
-                                            Áo thun Boxy 84RISING
-                                        </a>
-                                        <p>
-                                            <span className="new-price">259.000đ</span>
-                                            <del className="old-price">299.000đ</del>
-                                            <span className="percent-discount">-13%</span>
-                                        </p>
-                                    </li>
-                                    <li>
-                                        <a href="">
-                                            <img className="product-thumb"
-                                                src="public/images/ao-thun-body-84rising-xam.png" alt="" />
-                                        </a>
-                                        <a className="title" href="">
-                                            Áo thun Boxy 84RISING
-                                        </a>
-                                        <p>
-                                            <span className="new-price">259.000đ</span>
-                                            <del className="old-price">299.000đ</del>
-                                            <span className="percent-discount">-13%</span>
-                                        </p>
-                                    </li>
-                                </ul>
-                                <a href="">Xem tất cả</a>
-                            </div> */}
-
-                        </div>
-                        <div className="info-account">
-                            <i className="fa-regular fa-user"></i>
-                            <div className="show-info-account">
-                                <div className="wp-hello-account d-flex">
-                                    <div className="hello-account">
-                                        <span id="close-sum-account">
-                                            <i className="fa-solid fa-xmark"></i>
-                                        </span>
-                                        <h2>Hi, Hà Văn Dũng</h2>
-                                        <img src={New} alt="" />
-                                    </div>
-
-                                </div>
-                                <div className="body">
-                                    <div className="account-line">
-                                        <div className="spending">
-                                            <p>Chi tiêu thêm</p>
-                                            <p className="price">500.000đ</p>
-                                            <p>để lên hạng <img src={Bac} alt="" /> </p>
-                                        </div>
-                                        <div className="line-ranking">
-                                            <div className="line"></div>
-                                            <div className="milestones d-flex">
-                                                <span className="milestone-1">
-                                                </span>
-                                                <span className="milestone-2">
-                                                </span>
-                                                <span className="milestone-3">
-                                                </span>
-                                                <span className="milestone-4">
-                                                </span>
-                                            </div>
-                                            <div className="ranking-icons">
-                                                <ul className="d-flex">
-                                                    <li>
-                                                        <img src={RankingLevel1} alt="" />
-                                                    </li>
-                                                    <li>
-                                                        <img src={RankingLevel2} alt="" />
-                                                    </li>
-                                                    <li>
-                                                        <img src={RankingLevel3} alt="" />
-                                                    </li>
-                                                    <li>
-                                                        <img src={RankingLevel4} alt="" />
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                            <p>Hạng thành viên sẽ được cập nhật lại sau 31/12/2023</p>
-                                        </div>
-                                    </div>
-                                    <div className="coolcash-coolclub d-flex">
-                                        <div className="coolcash">
-                                            <p>Bạn đang có</p>
-                                            <p>
-                                                <i className="fa-solid fa-hand-holding-dollar"></i>
-                                                <span>0 Coolcash</span>
-                                            </p>
-                                            <p>Chờ: 0 Coolcash</p>
-                                        </div>
-                                        <div className="coolclub">
-                                            <a href="">
-                                                CoolClub Rewards Hub
-                                            </a>
-                                            <i className="fa-solid fa-arrow-right"></i>
-                                        </div>
-                                    </div>
-                                    <div className="special-orders">
-                                        <h3>Ưu đãi dành riêng cho bạn</h3>
-                                        <ul>
-                                            <li>
-                                                <div>
-                                                    <p className="title-voucher">COOLCLUB10</p>
-                                                    <p className="desc-voucher">
-                                                        Giảm 10% cho đơn hàng 0đ (Dành cho khách hàng CoolClub)
-                                                    </p>
-                                                    <p className="expiry">HSD: 30.11.2023</p>
-                                                    <a href="" className="use-immediately-voucher">Sử dụng ngay</a>
-                                                </div>
-                                            </li>
-                                            <li>
-                                                <div>
-                                                    <p className="title-voucher">WELCOMEFRKIW1</p>
-                                                    <p className="desc-voucher">
-                                                        Giảm 15% tối đa 50K (Không áp dụng cho danh mục SALE)
-                                                    </p>
-                                                    <p className="expiry">HSD: 02.11.2023</p>
-                                                    <a href="" className="use-immediately-voucher">Sử dụng ngay</a>
-                                                </div>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <div className="others-tools">
-                                        <ul className="d-flex">
-                                            <li>
-                                                <a href="">
-                                                    <img src={ViVoucher} alt="" />
-                                                    <span>Ví Voucher</span>
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="">
-                                                    <img src={LichSuDonHang} alt="" />
-                                                    <span>Lịch sử đơn hàng</span>
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="">
-                                                    <img src={SoDiaChi} alt="" />
-                                                    <span>Sổ địa chỉ</span>
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="">
-                                                    <img src={CaiDatTaiKhoan} alt="" />
-                                                    <span>Cài đặt tài khoản</span>
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="">
-                                                    <img src={DanhGiaPhanHoi} alt="" />
-                                                    <span>Đánh giá và phản hồi</span>
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="">
-                                                    <img src={FaqChinhSach} alt="" />
-                                                    <span>FAQ & Chính sách</span>
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                                <div className="redirect-account">
-                                    <a href="">ĐI ĐẾN TÀI KHOẢN</a>
-                                </div>
-                            </div>
-                        </div>
                         <div className="cart">
-                            <a href="cart.html"><i className="fa-solid fa-cart-shopping"><span>2</span></i></a>
-                            <div className="show-cart-buy">
-                                <div className="num-cart">
-                                    <p><span>2 sản phẩm</span> <a href="cart.html">Xem tất cả</a></p>
+                            <Link to={'/cart'}>
+                                <i className="fa-solid fa-cart-shopping"><span>{cart.length}</span></i>
+                            </Link>
+                            {cart.length > 0 && (
+                                <div className="show-cart-buy">
+                                    <div className="num-cart">
+                                        <p><span>{cart.length} sản phẩm</span> <Link to="/cart">Xem tất cả</Link></p>
+                                    </div>
+                                    <div className="list-buy">
+                                        <ul className="d-flex">
+                                            {cart.map((item, index) => (
+                                                <li key={index} className="d-flex">
+                                                    <Link to={`/product-detail/${item.productId}`}>
+                                                        <img src={item.image} alt="" className="product-thumb" />
+                                                    </Link>
+                                                    <div className="product-detail">
+                                                        <a className="product-name" href="">{item.name}</a>
+                                                        <div
+                                                            style={{
+                                                                width: '20px',
+                                                                height: '20px',
+                                                                backgroundColor: item.color,
+                                                                borderRadius: '50%',
+                                                                margin: '4px 0px',
+                                                                cursor: 'pointer'
+                                                            }}
+                                                        />
+                                                        <div className="style">Size: {item.size}</div>
+                                                        <p><span className="new-price">{item.unitPrice.toLocaleString()}đ</span></p>
+                                                        <p className="num">x{item.quantity}</p>
+                                                    </div>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
                                 </div>
-                                <div className="list-buy">
-                                    <ul className="d-flex">
-                                        <li className="d-flex">
-                                            <a href="">
-                                                <img src={QuanDaiTheThaoProActive} alt=""
-                                                    className="product-thumb" />
-                                            </a>
-                                            <div className="product-detail">
-                                                <a className="product-name" href="">Quần dài thể thao Pro Active</a>
-                                                <div className="style">Xám phối đen / M</div>
-                                                <p><span className="new-price">379.000đ</span> <del
-                                                    className="old-price">399.000đ</del></p>
-                                                <p className="num">x2</p>
-                                            </div>
-                                            <div className="button-delete">
-                                                <i className="fa-solid fa-xmark"></i>
-                                            </div>
-                                        </li>
-                                        <li className="d-flex">
-                                            <a href="">
-                                                <img src={AoDaiTayCompactV2} alt=""
-                                                    className="product-thumb" />
-                                            </a>
-                                            <div className="product-detail">
-                                                <a className="product-name" href="">Áo dài tay Cotton Compact V2</a>
-                                                <div className="style">Xanh Navy / M</div>
-                                                <p><span className="new-price">269.000đ</span> <del
-                                                    className="old-price"></del></p>
-                                                <p className="num">x1</p>
-                                            </div>
-                                            <div className="button-delete">
-                                                <i className="fa-solid fa-xmark"></i>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
+                            )}
                         </div>
 
                     </div>

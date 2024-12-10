@@ -61,7 +61,7 @@ export const ValidatePassword = (password: string, confirmPassword: string) => {
 export const ValidatePhoneNumber = (phone: string) => {
     const phonePattern = /^(0[3|5|7|8|9][0-9]{8})$/;
     if (!phonePattern.test(phone)) {
-        toast.error('Please enter a valid Vietnamese phone number (10 digits starting with 03, 05, 07, 08, 09).');
+        // toast.error('Please enter a valid Vietnamese phone number (10 digits starting with 03, 05, 07, 08, 09).');
         return false;
     }
     return true;

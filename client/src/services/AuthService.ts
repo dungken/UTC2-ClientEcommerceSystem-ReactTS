@@ -27,32 +27,25 @@ const getAuthHeader = () => {
 };
 
 
-// Generic function to handle API requests
-const apiRequest = async (method: 'post' | 'get', url: string, data: any = null, headers = {}) => {
+// Account Services
+
+export const RegisterService = async (userData: any) => {
     try {
-        // const response = await axios[method](url, data, { headers });
-        // if (response.data && response.data.status === "success") {
-        //     return response.data.message;
-        // }
-        // throw new Error(response.data.message || "An unexpected error occurred.");
-    } catch (error: any) {
-        // Enhanced error handling to show the backend error message
-        const errorMessage = error.response?.data?.message || "An unexpected error occurred.";
-        throw new Error(errorMessage);
+        const response = await axios.post('/Account/Register', userData);
+        return response.data;
+    } catch (error) {
+        return (error as any).response.data;
     }
 };
 
-// Account Services
-export const RegisterService = async (userData: UserData) => {
-    return (await axios.post('/Account/Register', userData)).data;
-};
-
-export const SocialLoginService = async (accessToken: string, provider: string) => {
-    return apiRequest('post', '/Account/SocialLogin', { accessToken, provider });
-};
 
 export const ConfirmEmailService = async (token: string, email: string) => {
-    return apiRequest('post', '/Account/ConfirmEmail', { token, email });
+    try {
+        const response = await axios.post('/Account/ConfirmEmail', { token, email });
+        return response.data;
+    } catch (error) {
+        return (error as any).response.data;
+    }
 };
 
 export const LoginService = async (credentials: Credentials) => {
@@ -71,28 +64,10 @@ export const ForgotPasswordService = async (email: string) => {
         console.log(response.data);  // Kiểm tra dữ liệu trả về
         return response;  // Trả về response thành công
     } catch (error) {
-        console.log(error);  // Kiểm tra lỗi
-
-        // // Xử lý lỗi nếu có
-        // if (error.response) {
-        //     // Nếu có lỗi phản hồi từ server (ví dụ: lỗi 404, 500)
-        //     console.error('Error response:', error.response);
-        //     alert('An error occurred: ' + error.response.data.message);
-        // } else if (error.request) {
-        //     // Nếu không nhận được phản hồi từ server
-        //     console.error('Error request:', error.request);
-        //     alert('Network error. Please try again later.');
-        // } else {
-        //     // Lỗi khác (có thể là lỗi trong quá trình setup yêu cầu)
-        //     console.error('Error:', error.message);
-        //     alert('An unexpected error occurred. Please try again later.');
-        // }
+        console.log(error);
     }
 };
 
-export const ResetPasswordService = async (token: string, email: string, newPassword: string) => {
-    return apiRequest('post', '/Account/ResetPassword', { token, email, newPassword });
-};
 
 export const ChangePasswordService = async (currentPassword: string, newPassword: string) => {
     return await axios.post('/Account/ChangePassword', { currentPassword, newPassword }, getAuthHeader());

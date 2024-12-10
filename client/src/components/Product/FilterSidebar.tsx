@@ -1,12 +1,18 @@
 // components/FilterSidebar.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
+import { GetCategoriesService } from '../../services/ProductService';
 
-const FilterSidebar: React.FC = () => {
+interface FilterSidebarProps {
+    categories: string[];
+}
+
+const FilterSidebar: React.FC<FilterSidebarProps> = ({ categories }) => {
+
     return (
         <aside style={{ width: '200px', padding: '10px 30px', borderRight: '1px solid #ddd' }}>
             <h5>Nhóm sản phẩm</h5>
             <div>
-                {['Áo Thun', 'Áo Sơ Mi', 'Áo Tanktop', 'Áo Polo', '84RISING', 'Áo khoác', 'Áo dài tay', 'Áo thể thao'].map(
+                {categories.map(
                     (category) => (
                         <div key={category}>
                             <input type="radio" name="category" id={category} />

@@ -21,7 +21,7 @@ const BaseField: React.FC<BaseFieldProps> = ({
     onChange,
     disabled,
 }) => (
-    <div className="col-md-6">
+    <div className="col-md-12">
         <label htmlFor={id} className="form-label">{label}</label>
         <input
             type={type}
@@ -77,7 +77,7 @@ const ConfirmPasswordField: React.FC<{
     value: string;
     onChange: React.ChangeEventHandler<HTMLInputElement>;
 }> = ({ label, id, name, visible, setVisible, value, onChange }) => (
-    <div className="form-password-toggle col-md-6">
+    <div className="form-password-toggle col-md-12">
         <label className="form-label" htmlFor={id}>{label}</label>
         <div className="input-group input-group-merge">
             <input
@@ -104,7 +104,7 @@ interface PhoneNumberFieldProps {
 }
 
 const PhoneNumberField: React.FC<PhoneNumberFieldProps> = ({ value, onChange }) => (
-    <div className="col-md-6">
+    <div className="col-md-12">
         <label htmlFor="modalEditUserPhone" className="form-label">Phone Number</label>
         <div className="input-group">
             <span className="input-group-text">VN(+84)</span>
@@ -144,7 +144,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
     options,
     disabled = false,
 }) => (
-    <div className="col-md-4">
+    <div className="col-md-12">
         <label htmlFor={id} className="form-label">{label}</label>
         <select
             id={id}

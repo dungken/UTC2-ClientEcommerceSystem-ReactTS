@@ -14,18 +14,22 @@ export const CreateUserService = async (user: any) => {
 };
 
 export const GetPersonalInfoService = async () => {
-    const response = await axios.get('/User/GetPersonalInfo', { headers: getAuthHeader() });
-    // console.log(response.data);
-
-    return response.data;
+    try {
+        const response = await axios.get('/User/GetPersonalInfo', { headers: getAuthHeader() });
+        return response.data;
+    } catch (error) {
+        return (error as any).response.data;
+    }
 }
-
-
 export const UpdatePersonalInfoService = async (user: any) => {
-    const response = await axios.put('/User/UpdatePersonalInfo', user, { headers: getAuthHeader() });
-    console.log(response);
+    try {
+        const response = await axios.post('/User/UpdatePersonalInfo', user, { headers: getAuthHeader() });
+        // console.log("Update personal info response:", response);
 
-    return response;
+        return response.data;
+    } catch (error) {
+        return (error as any).response.data;
+    }
 }
 export const DeleteAccountService = async (username?: string) => {
     // console.log("Deleting account for:", username);
