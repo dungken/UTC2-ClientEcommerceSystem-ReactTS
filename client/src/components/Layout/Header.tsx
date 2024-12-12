@@ -61,11 +61,14 @@ interface Category {
 
 // Component hiển thị danh mục con
 const SubCategoryList: React.FC<{ subCategories: Category[] }> = ({ subCategories }) => {
-    if (subCategories.length === 0) return null;
+    // Filter Subcategories have Status = "active"
+    const activeSubCategories = subCategories.filter(subCategory => subCategory.status === "Active");
+
+    if (activeSubCategories.length === 0) return null;
 
     return (
         <ul style={{ margin: '0px 20px' }}>
-            {subCategories.map((subCategory) => (
+            {activeSubCategories.map((subCategory) => (
                 <li key={subCategory.id}>
                     <Link
                         to={`/collection-product/${subCategory.id}`}
@@ -118,7 +121,6 @@ const Header = () => {
         fetchCategories();
     }, []);
 
-    // console.log(categories);
     // Lọc các danh mục cha (parentCategoryId === null)
     const parentCategories = categories.filter((cat) => cat.parentCategoryId === null);
 
