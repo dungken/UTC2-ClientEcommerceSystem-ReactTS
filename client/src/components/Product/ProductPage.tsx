@@ -116,7 +116,8 @@ const ProductPage: React.FC = () => {
                             <li className="product-card" key={product.name} style={{ textAlign: 'center', listStyle: 'none' }}>
                                 <div className="product-image">
                                     <Link to={`/product-detail/${product.id}`}>
-                                        <img src={product.images[0].url} alt={product.name} style={{ width: '100%', borderRadius: '8px' }} />
+                                        <img src={product.images[0] && product.images[0].url || "https://st4.depositphotos.com/14953852/24787/v/380/depositphotos_247872612-stock-illustration-no-image-available-icon-vector.jpg"} alt={product.name} style={{ width: '100%', borderRadius: '8px' }} />
+
                                     </Link>
                                 </div>
                                 <div className="product-info" style={{ display: 'block' }}>

@@ -59,7 +59,12 @@ const OrderHistory = () => {
                     <div key={order.id} className="list-group-item rounded my-3 bg-light">
                         <div className="d-flex justify-content-between align-items-center mb-2">
                             <h5 className="mb-0">Coolmate Official Store</h5>
-                            <span className={`badge bg-${order.status.toLowerCase() === 'pending' ? 'warning' : 'success'}`}>
+                            <span
+                                className={`badge ${order.status === 'Completed' ? 'bg-success' :
+                                    order.status === 'Pending' ? 'bg-warning' :
+                                        order.status === 'Cancelled' ? 'bg-danger' : 'bg-info'}`
+                                }
+                            >
                                 {order.status}
                             </span>
                         </div>
